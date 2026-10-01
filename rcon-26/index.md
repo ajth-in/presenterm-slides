@@ -593,6 +593,67 @@ that something is loading instead of reading the card it stands in for.
 ![image:width:100%](./skullmaster-demo.gif)
 
 <!-- end_slide -->
+## Customizability
+---
+
+Of course we could go and edit the generated files. But that breaks the single source
+of truth — and the fix dies the next time we generate. So the correction goes into the
+source, where it changes no styles in production: only the way the skeleton is generated.
+
+<!-- pause -->
+### <span style="color:#4ADE80">Data attributes to the rescue</span>
+
+They ride along in the DOM for free, and the generator is the only thing that reads them.
+
+<!-- pause -->
+### `data-depth="-1"` — transparent, but still laid out
+
+Set it on elements that should stay invisible while keeping their place in the layout.
+Remove it, or set another depth, on elements that should render a visible bone.
+
+<!-- pause -->
+### `data-skip-skull` — leave the whole subtree out
+
+Add it to the root of anything that should not be generated at all. SkullMaster ignores
+that element and every one of its descendants.
+
+```html
+<div data-skip-skull>
+  <!-- this subtree never reaches the skeleton -->
+</div>
+```
+
+<!-- end_slide -->
+## Customizability, type safe
+---
+
+The same corrections, without touching markup by hand. The attributes had to be typed
+into the DOM; these are typed for you.
+
+<!-- pause -->
+### `markAsSkull(name, tweaks?)`
+
+Registers the component for skeleton generation, and takes the tweaks for the top level
+element:
+
+```tsx {1}
+<section {...markAsSkull("Hero", { isTransparent: true })}>...</section>
+```
+
+<!-- pause -->
+### `tweakForSkull(tweaks?)`
+
+The same tweaks, applied to a child of an element that is already registered:
+
+```tsx {1}
+<fieldset {...tweakForSkull({ hideSubTree: true })}>...</fieldset>
+```
+
+<!-- pause -->
+Nothing here changes production styling — the tweaks only change what ends up in the
+generated skeleton.
+
+<!-- end_slide -->
 ## Thanks!
 ---
 <!-- column_layout: [1] -->
