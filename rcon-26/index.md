@@ -3,60 +3,52 @@ title: Automating the Annoying
 sub_title: Lessons from Extracting Loaders Directly from the DOM
 event: RenderCon Kenya 2026
 author: Ajith Kumar P M
+theme:
+  name: catppuccin-mocha
 
 ---
-
-# Designing Faster Loading Screens
+## Lot of skeletons
+![](./skeleton-usage-1.jpg)
+_An example UI skeleton_
+<!--end_slide -->
+## Design Principles
 ---
 
-Waiting is inevitable. Being boring about it is optional.
+<!-- pause -->
+### 1. The source should be the only thing you need to maintain
 
-Three ideas that make the wait feel shorter:
-
-## ⦿ Controlling the perception of time
+Skeletons should be generated from the source code rather than maintained separately.
 
 <!-- pause -->
-<!-- alignment: center -->
-| Loader style | Feels like |
-| ------------ | ---------- |
-| <span style="color:#A1A1AA">○ Blank screen</span> | <span style="color:#F87171">× Broken</span> |
-| <span style="color:#A1A1AA">◌ Spinner</span>      | <span style="color:#FBBF24">~ Waiting</span> |
-| <span style="color:#A1A1AA">▧ Skeleton</span>     | <span style="color:#4ADE80">✓ Almost done</span> |
+### 2. Generated skeletons should still be customizable
+
+You should be able to adjust the generated result when it isn't exactly what you
+want, without maintaining an entirely separate skeleton.
 
 <!-- pause -->
-<!-- alignment: left -->
-## ⦿ Setting expectations with the UI
+### 3. The generated skeleton should represent the rendered UI
 
-> A fake progress bar is a promise you will break. Users forgive waiting;
-> they do not forgive being lied to.
+What matters is not just the source markup, but what the component actually looks
+like when rendered.
 
 <!-- pause -->
+### 4. The generated result should actually be a skeleton
 
+Meaningful content from the source should not leak into the generated skeleton.
 
-
-
-## ⦿ Progressive loading
-
-> Do not block the first byte on the last byte.
-
-<!-- end_slide -->
-## We need skeletons!!
----
-<!-- alignment: center -->
-![image:width:100%](./ui-skeleton.png)
-_Skeleton UI Example_
 <!-- end_slide -->
 <!-- jump_to_middle -->
-
-Building one is annoying!!
+Stage 1: <span style="color:blue">No generated skeletons</span>
 ---
+
 <!-- end_slide -->
-
-
 ## Building the skeleton 
 ---
-A perfectly normal user card, shipping to production.
 
+A perfectly normal user card, shipping to production.
+<!-- column_layout: [3, 2] -->
+
+<!-- column: 0 -->
 ```tsx {3|7-8|9}
 function UserCard({ user }) {
   return (
@@ -72,13 +64,10 @@ function UserCard({ user }) {
   );
 }
 ```
+<!-- column: 1 -->
+![](./user-card.png)
 
-<!-- pause -->
-Real semantics: the `article` is a landmark, the `h3` a heading, the `p` a paragraph.
-
-<!-- pause -->
-The `button` it takes focus, it answers the keyboard, it gets announced as a control.
-
+<!-- reset_layout -->
 <!-- end_slide -->
 ## The skeleton we write instead
 ---
@@ -86,22 +75,30 @@ The `button` it takes focus, it answers the keyboard, it gets announced as a con
 > content — a `p` announced as text, a `button` announced as a control you can
 > tab to. We can't keep the same semantic elements here.
 
-```tsx {3,9}
+<!-- column_layout: [3, 2] -->
+
+<!-- column: 0 -->
+```tsx
+
+import "./skeleton-styles.css"
 function UserCardSkeleton() {
   return (
-    <div className="user-card">
-      <div className="avatar" />
+    <div className="user-card-skeleton">
+      <div className="avatar-skeleton" />
 
-      <div className="content">
-        <div className="name" />
-        <div className="headline" />
-        <div className="connect" />
+      <div className="content-skeleton">
+        <div className="name-skeleton" />
+        <div className="headline-skeleton" />
+        <div className="connect-skeleton" />
       </div>
     </div>
   );
 }
 ```
+<!-- column: 1 -->
+![](./user-card-skeleton.png)
 
+<!-- reset_layout -->
 
 <!-- end_slide -->
 ## Multi source of truth
@@ -153,34 +150,8 @@ Two files, one line, and nothing that forces them to move together.
 <!-- jump_to_middle -->
 
 <!-- alignment: center -->
-Generating skeletons from source!!
+Stage 2: <span style="color:green">Generating UI during the build</span>
 --
-
-<!-- end_slide -->
-## Design Principles
----
-
-<!-- pause -->
-### The source should be the only thing you need to maintain
-
-Skeletons should be generated from the source code rather than maintained separately.
-
-<!-- pause -->
-### Generated skeletons should still be customizable
-
-You should be able to adjust the generated result when it isn't exactly what you
-want, without maintaining an entirely separate skeleton.
-
-<!-- pause -->
-### The generated skeleton should represent the rendered UI
-
-What matters is not just the source markup, but what the component actually looks
-like when rendered.
-
-<!-- pause -->
-### The generated result should actually be a skeleton
-
-Meaningful content from the source should not leak into the generated skeleton.
 
 <!-- end_slide -->
 ## Can we generate this from source alone?
@@ -188,7 +159,7 @@ Meaningful content from the source should not leak into the generated skeleton.
 ```tsx {4-12|3,13}
 function UserCardPage({ user }) {
   return (
-    <Skeleton loading={user.isLoading}>
+    <Skeleton loading={user.isLoading} name="UserCardSkeleton">
       <article className="user-card">
         <img className="avatar" src={user.avatar} alt={user.name} />
 
@@ -204,30 +175,33 @@ function UserCardPage({ user }) {
 ```
 
 <!-- pause -->
-The card stays the card. We don't describe a skeleton, we wrap the real thing.
 
-<!-- pause -->
-Two lines of wrapper, and the loader comes out of the source we already maintain.
+```d2 +render
+direction: right
+
+Bundler Plugin: Walk source & find <Skeleton />
+Generate: Generate & save skeleton
+Runtime: Load generated skeleton while UI loads
+
+Bundler Plugin -> Generate
+Generate -> Runtime
+```
 
 <!-- end_slide -->
+
 ## Option 1: The skeleton
 ---
 The skeleton has to represent the rendered UI, so nothing semantic survives. So we
 walk the source, and swap every element we can't keep.
 
 ```tsx {1,3}
-function Skeleton({ loading, children }) {
+function Skeleton({ loading, children, name }) {
   if (!loading) return children;
-  return toSkeleton(children);
+  return magicallyLoadTheGeneratedSkeleton(name);
 }
 ```
 
-<!-- pause -->
-> This is a **runtime** walk, and that's the problem. If you are going this way,
-> you should have done it at build time — as a bundler plugin, or the correct
-> one for your framework — not on every render, in every browser.
-
-But the real question is: can we get the skeleton from the source alone?
+Can we get the skeleton from the source alone?
 
 <!-- end_slide -->
 ## No You Cant!!
@@ -257,9 +231,15 @@ the exact moment the user can least tolerate one.
 media queries · CSS-in-JS that only exists at runtime
 
 <!-- pause -->
-> We cant generate the skeltons from the source alone!! 
+> Only the browser which is going to render this component knows this information 
 
 <!-- end_slide -->
+<!-- jump_to_middle -->
+Stage 3: <span style="color:blue">We need the browser<span>
+---
+
+<!-- end_slide -->
+
 ## Option 2: Little help from browser
 ---
 We need a browser for the runtime information. So use one — once, at build time:
@@ -329,7 +309,7 @@ The skeleton is generated once, committed, and never touched by hand again.
 The first time you run this, the skeleton doesn't exist yet — so importing it by name
 is an error. So we ship one generic component that resolves the name lazily:
 
-```tsx {5,15}
+```tsx {all,15}
 import DefaultBone from "./skeletons/DefaultBone";
 import { lazy } from "react";
 
@@ -441,30 +421,69 @@ names we wrote, and nothing else:
 ```
 
 <!-- pause -->
-`1` — **transform it**:  Make this a skeleton
+```d2 +render
+direction: right
 
-`2` — **save it**: `skeletons/UserCardSkeleton.tsx`, and one more registry entry.
+click: {
+  label: "👆 User clicks card"
+}
+
+capture: {
+  label: "Capture rendered HTML\n+ runtime information, and process it"
+}
+
+
+decision: {
+  label: "🤔 What do we do with it?"
+}
+
+save: {
+  label: "💾 Download"
+}
+
+send: {
+  label: "☁️ Send via http"
+}
+
+
+
+click -> capture
+capture -> decision
+
+decision -> save
+decision -> send
+```
+<!-- end_slide -->
+<!-- jump_to_middle -->
+Stage 4: <span style="color:blue">The Dev Server<span>
+---
+
+
 
 <!-- end_slide -->
 ## The server
 ---
 
-We run one command, next to the project:
+```d2 +render
+direction:down
+Click: "User clicked on\ncomponent"
+Server: "Skullmaster Dev Server\nlocalhost:8008"
 
-```bash
-skullmaster serve
-# listening on http://localhost:8008
+Transform: "Transform HTML payload\n→ React component"
+Skeleton: "skeletons/UserCardSkeleton.tsx\n\nNew React component"
+Registry: "registry.tsx\n\nAdd newly saved component"
+
+
+Click -> Server: "2. Send captured\nHTML payload"
+
+Server -> Transform: "3. Process payload"
+Transform -> Skeleton: "4. Save generated component"
+Transform -> Registry: "5. Update registry.tsx"
+
 ```
 
-<!-- pause -->
-`1` — the browser posts the captured payload to `localhost:8008`.
 
-`2` — the server reads the client project, so it knows the stack it has to write.
 
-`3` — the HTML is turned back into a React component, saved as
-`skeletons/UserCardSkeleton.tsx`.
-
-`4` — the registry file gets one more `lazy` entry, and the skeleton is live.
 
 <!-- end_slide -->
 ## How it works
@@ -526,71 +545,151 @@ behaves like a skeleton: we inject the ARIA attributes and strip the meaningful
 information out of the source.
 
 <!-- end_slide -->
-## Strip the content
+## Transformation 1: Strip meaningful text
 ---
 
-Three of the seven things we take out, before the element can be called a skeleton:
+Every text node becomes a placeholder with the same approximate visual footprint.
 
-<!-- pause -->
-### Replacing text content with skeleton placeholders
-Every text node becomes a placeholder of its own size. We don't want any leaks
-happening — nothing from the real UI ends up in the skeleton, not a name, not a
-price, not a stray tooltip string.
+```tsx
+<span className="empty-set__text" data-text-node="true" data-depth="1">
+  ██████ █████
+</span>
+```
 
-<!-- pause -->
-### Force override the colors of elements based on the depth
-Every color the browser computed is thrown away and replaced by one from a small
-palette, picked by how deep the element sits. A card becomes one flat surface
-instead of a stack of unrelated colors.
-
-<!-- pause -->
-### Removing image sources and replacing them with generated placeholders
-The `src` goes, and in its place a generated bone. Its width and height come from
-the natural width and height of the image — which the browser gives us along with
-the runtime info, so the placeholder never shifts the layout.
+The original content is gone. Names, prices, labels, and other meaningful strings never
+reach the generated skeleton.
 
 <!-- end_slide -->
-## Reshape what is left
+## Transformation 2: Strip images
 ---
 
-The elements stay, so they have to be rebuilt into something that reads as a bone:
+Images are replaced with empty generated placeholder graphics
+```tsx
+   <img
+        data-depth="1"
+        className="h-48 w-full object-cover"
+        data-skull-btlr="0"
+        data-skull-btrr="0"
+        data-skull-bbrr="0"
+        data-skull-bblr="0"
+        data-visual-significance="0.20"
+        alt=""
+        src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.....%3E"
+        data-image-skeleton="true"
+      />
+```
 
-<!-- pause -->
-### Suppressing the interactivity of elements
-Every handler, link and state is dropped. On top of that we add aria labels, so
-the details are completely hidden — there is nothing left to click, and nothing
-left to read out.
-
-<!-- pause -->
-### Adding style overrides to visually transform elements into skeletons
-The styles are where the element turns into a bone: backgrounds, borders, radii
-and text are overridden per element and per depth, until the markup behind it is
-invisible.
-
-<!-- pause -->
-### Removing or hiding visually insignificant elements
-The `div` wrappers that exist only for layout are dropped, along with anything
-that renders to nothing. Fewer elements, smaller component, same picture.
 
 <!-- end_slide -->
-## Make it behave like a skeleton
+## Transformation 3: Strip interactivity
 ---
 
-A skeleton is not only a picture. It has to behave like one:
+Interactive elements remain in the generated tree, but their behavior is removed and
+the element is hidden from assistive technology.
 
-<!-- pause -->
-### Adding the appropriate accessibility attributes for a loading state
-The result gets the attributes of a loading state, so a screen reader announces
-that something is loading instead of reading the card it stands in for.
+```tsx
+<a
+  data-depth="2"
+  className="interactive-link"
+  data-skull-btlr="0"
+  data-skull-btrr="0"
+  data-skull-bbrr="0"
+  data-skull-bblr="0"
+  data-visual-significance="0.20"
+  data-skeleton-interactive="true"
+  aria-hidden="true"
+  tabIndex={-1}
+>
+  ████ ████
+</a>
+```
 
-<!-- pause -->
-> There is more to it than that.
+
+<!-- end_slide -->
+## Transformation 4: Strip form interaction
+---
+
+Inputs keep their geometry and type, but become inert skeleton elements.
+
+```tsx
+<input
+  data-depth="3"
+  className="interactive-input"
+  type="text"
+  data-skull-btlr="0"
+  data-skull-btrr="0"
+  data-skull-bbrr="0"
+  data-skull-bblr="0"
+  data-visual-significance="0.46"
+  data-skeleton-interactive="true"
+  aria-hidden="true"
+  tabIndex={-1}
+  autoComplete="off"
+  data-1p-ignore="true"
+  data-lpignore="true"
+  data-bwignore="true"
+  data-protonpass-ignore="true"
+  form="none"
+/>
+```
+
+
+<!-- end_slide -->
+## Transformation 5: Mark the skeleton root
+---
+
+The generated root is explicitly identified as a loading state.
+
+```tsx
+<div
+  data-depth="0"
+  className="card interactive-card empty-set__skeleton"
+  data-skullmaster="AnchorLinks"
+  role="status"
+  aria-live="polite"
+  aria-busy="true"
+>
+  ...
+</div>
+```
+
+
+<!-- end_slide -->
+## Transformation 7: Remove insignificant elements
+---
+
+Layout-only elements that do not contribute meaningful visual structure can be removed.
+
+```tsx
+// Source
+<div className="wrapper">
+  <div className="layout-helper">
+    <span>{user.name}</span>
+  </div>
+</div>
+
+// Generated skeleton
+<div data-depth="0">
+  <span data-text-node="true" data-depth="2">
+    ██████ █████
+  </span>
+</div>
+```
+
+The generator keeps the visual structure that matters and drops elements that render to
+nothing or contribute no meaningful visual information.
 
 <!-- end_slide -->
 ## Automatic generation
 ---
 
 ![image:width:100%](./skullmaster-demo.gif)
+
+
+<!-- end_slide -->
+<!-- jump_to_middle -->
+Stage 5: <span style="color:blue">Customization<span>
+---
 
 <!-- end_slide -->
 ## Customizability
