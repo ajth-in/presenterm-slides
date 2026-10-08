@@ -12,6 +12,34 @@ theme:
 _An example UI skeleton_
 
 <!-- end_slide -->
+# Three Ways to Generate Skeletons
+---
+
+We’ll explore three approaches to generating skeletons from the source:
+
+<!-- pause -->
+
+## **01 · Build time + real browser**  
+Render the actual application and extract the layout.
+
+---
+
+<!-- pause -->
+
+## **02 · Build time + headless browser**  
+Use the same rendering approach, but run it without a visible browser.
+
+---
+<!-- pause -->
+
+## **03 · Build time + lightweight rendering pipeline**  
+Extract the layout information needed for skeleton generation without relying on a full browser runtime.
+
+---
+<!-- pause -->
+
+**The goal:** move skeleton generation to build time while balancing **fidelity, build speed, and complexity**.
+<!-- end_slide -->
 ## Building skeletons manually
 ---
 
@@ -477,7 +505,72 @@ The same tweaks, applied to a child of an element that is already registered:
 <!-- pause -->
 Nothing here changes production styling — the tweaks only change what ends up in the
 generated skeleton.
+<!-- end_slide -->
+# Comparisons
+--- 
 
+## Comparing the Approaches
+
+<!-- column_layout: [3, 2] -->
+
+<!-- column: 0 -->
+
+|                       | Skullmaster | Boneyard JS | SHS |
+|-----------------------|-------------|-------------|-----------|
+| Runtime overhead      | 🟢 Yes      | 🟢 Yes      | 🟢 No     |
+| Customizability       | 🟡 Limited  | 🟡 Limited  | 🟢 High   |
+| Auto-sync             | 🔴 No       | 🟢 Yes      | 🟢 Yes    |
+| Conditional components | ⚪ Same    | ⚪ Same     | ⚪ Same   |
+| Mock fixtures         | 🟡 Required | 🟡 Required | 🟡 Requir |
+| Real skeleton markup  | 🔴 No       | 🟢 Yes      | 🟢 Yes    |
+
+---
+<!-- pause -->
+### Runtime overhead
+
+Shimmer From Structure generates the skeleton at build time, so there is no runtime generation overhead.
+
+
+<!-- pause -->
+### Customizability
+
+Shimmer From Structure supports customization through data attributes, giving developers control over individual elements.
+
+<!-- pause -->
+### Auto-sync
+
+Boneyard JS and Shimmer From Structure can regenerate when UI code changes.
+For Skullmaster, component hashing  alert the developer, but regeneration remains developer-triggered.
+
+
+<!-- column: 1 -->
+
+
+
+
+
+
+<!-- pause -->
+
+### Conditional components
+
+No meaningful difference.
+
+Modals, authenticated content, and other conditional UI require a headless browser and mock fixtures in all three approaches.
+
+<!-- pause -->
+
+### Mock fixtures
+
+All three approaches require mock fixtures for conditional or otherwise inaccessible UI.
+
+<!-- pause -->
+
+### Real skeleton markup
+
+Boneyard JS and Shimmer From Structure produce real skeleton markup.
+
+Skullmaster does not.
 <!-- end_slide -->
 ## Thanks!
 ---
