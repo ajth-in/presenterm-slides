@@ -7,40 +7,40 @@ theme:
   name: catppuccin-mocha
 
 ---
-## Lot of skeletons
+## 🦴 Lot of skeletons
 ![](./skeleton-usage-1.jpg)
 _An example UI skeleton_
 
 <!-- end_slide -->
-# Three Ways to Generate Skeletons
+# 🛠️ Three Ways to Generate Skeletons
 ---
 
 We’ll explore three approaches to generating skeletons from the source:
 
 <!-- pause -->
 
-## **01 · Build time + real browser**  
+## **01 · 🖥️ Build time + real browser**  
 Render the actual application and extract the layout.
 
 ---
 
 <!-- pause -->
 
-## **02 · Build time + headless browser**  
+## **02 · 🤖 Build time + headless browser**  
 Use the same rendering approach, but run it without a visible browser.
 
 ---
 <!-- pause -->
 
-## **03 · Build time + lightweight rendering pipeline**  
+## **03 · ⚡ Build time + lightweight rendering pipeline**  
 Extract the layout information needed for skeleton generation without relying on a full browser runtime.
 
 ---
 <!-- pause -->
 
-**The goal:** move skeleton generation to build time while balancing **fidelity, build speed, and complexity**.
+**🎯 The goal:** move skeleton generation to build time while balancing **fidelity, build speed, and complexity**.
 <!-- end_slide -->
-## Building skeletons manually
+## ✍️ Building skeletons manually
 ---
 
 <!-- column_layout: [3, 2] -->
@@ -66,7 +66,7 @@ function UserCard({ user }) {
 
 <!-- reset_layout -->
 <!-- end_slide -->
-## The skeleton we write instead
+## 🦴 The skeleton we write instead
 ---
 >  A skeleton made of the real markup would be read out as
 > content — a `p` announced as text, a `button` announced as a control you can
@@ -98,7 +98,7 @@ function UserCardSkeleton() {
 <!-- reset_layout -->
 
 <!-- end_slide -->
-## Multi source of truth
+## 🔀 Multi source of truth
 ---
 Product ships one more action.
 
@@ -120,7 +120,7 @@ Product ships one more action.
 ```
 
 <!-- end_slide -->
-### And the skeleton has to follow it.
+### 🔄 And the skeleton has to follow it.
 --- 
 
 ```diff
@@ -140,21 +140,21 @@ Product ships one more action.
  }
 ```
 <!--end_slide -->
-## objectives 
+## 🎯 Objectives
 ---
 
 <!-- pause -->
-### 1. The source should be the only thing you need to maintain
+### 1️⃣ The source should be the only thing you need to maintain
 
 Skeletons should be generated from the source code rather than maintained separately.
 
 <!-- jump_to_middle -->
 ![single-source](./single-source.png)
 <!-- end_slide -->
-## objectives 
+## 🎯 Objectives
 ---
 
-### 2. Generated skeletons should still be customizable
+### 2️⃣ Generated skeletons should still be customizable
 
 You should be able to adjust the generated result when it isn't exactly what you
 want, without maintaining an entirely separate skeleton.
@@ -162,16 +162,16 @@ want, without maintaining an entirely separate skeleton.
 <!-- jump_to_middle -->
 ![regeneate](./regen.png)
 <!-- end_slide -->
-## objectives 
+## 🎯 Objectives
 ---
 
-### 3. The generated skeleton should represent the rendered UI
+### 3️⃣ The generated skeleton should represent the rendered UI
 
 What matters is not just the source markup, but what the component actually looks
 like when rendered.
 
 <!-- pause -->
-### 4. The generated result should actually be a skeleton
+### 4️⃣ The generated result should actually be a skeleton
 
 Meaningful content from the source should not leak into the generated skeleton.
 
@@ -182,7 +182,7 @@ Meaningful content from the source should not leak into the generated skeleton.
 ---
  <!-- end_slide -->
 
-## What the developer writes
+## ✏️ What the developer writes
 ---
 
 A marker, an import, and a switch. That's the whole change:
@@ -213,37 +213,37 @@ function UserCardPage({ user, isLoading }) {
 
 
 <!--end_slide -->
-## Skullmaster
+## ⚙️ Skullmaster
 ---
 The following diagram briefly explain the basic architecture of skullmaster
 
 ![Architecture diagram](./architecture.png)
 <!-- end_slide -->
-## Generating the skeleton
+## 🏗️ Generating the skeleton
 ---
 
-### <span style="color:#A1A1AA">Option 1: a headless browser</span>
+### 🤖 <span style="color:#A1A1AA">Option 1: a headless browser</span>
 Load the site in a headless browser, query the marked component with JS, save the
 rendered HTML, update the registry file. `boneyard.js` works almost exactly like
 this — we'll see at the end why we didn't take it.
 ![Headless browser diagram](./headless.png)
 <!-- end_slide -->
-## Generating the skeleton
+## 🏗️ Generating the skeleton
 ---
 
-### <span style="color:#4ADE80">Option 2: a dev-only script ← we go this way</span>
+### ✅ <span style="color:#4ADE80">Option 2: a dev-only script ← we go this way</span>
 Inject a development-only script. The developer opens the site, clicks the fully
 rendered component, and we read the runtime information off that click.
 ![not-headless](./not-headless.png)
 <!-- end_slide -->
-## Selecting the component
+## ☝️ Selecting the component
 ---
 
 ![image:width:100%](./comp-select-optimized.gif)
 
 
 <!-- end_slide -->
-## The server
+## 🖥️ The server
 ---
 
 ```d2 +render
@@ -268,12 +268,12 @@ Transform -> Registry: "5. Update registry.tsx"
 
 
 <!-- end_slide -->
-## The transformation
+## 🔧 The transformation
 ---
 
 Two ways to turn the captured markup into a skeleton.
 
-### <span style="color:#A1A1AA">Option 1: replace everything with `div`s</span>
+### 📝 <span style="color:#A1A1AA">Option 1: replace everything with `div`s</span>
 Every element becomes a box, sized from `getBoundingClientRect()`:
 
 ```tsx
@@ -286,7 +286,7 @@ A static picture of one screen size — render it wider and it is wrong. `boneya
 runs in a headless browser, so it can check more sizes than we can.
 
 <!-- pause -->
-### <span style="color:#4ADE80">Option 2: keep the elements semantically the same</span>
+### ✅ <span style="color:#4ADE80">Option 2: keep the elements semantically the same</span>
 
 ```tsx
 <img className="avatar" alt="" aria-hidden="true" />
@@ -299,7 +299,7 @@ behaves like a skeleton: we inject the ARIA attributes and strip the meaningful
 information out of the source.
 
 <!-- end_slide -->
-## Transformation 1: Strip meaningful text
+## 📝 Transformation 1: Strip meaningful text
 ---
 
 Every text node becomes a placeholder with the same approximate visual footprint.
@@ -314,7 +314,7 @@ The original content is gone. Names, prices, labels, and other meaningful string
 reach the generated skeleton.
 
 <!-- end_slide -->
-## Transformation 2: Strip images
+## 🖼️ Transformation 2: Strip images
 ---
 
 Images are replaced with empty generated placeholder graphics
@@ -335,7 +335,7 @@ Images are replaced with empty generated placeholder graphics
 
 
 <!-- end_slide -->
-## Transformation 3: Strip interactivity
+## 🔗 Transformation 3: Strip interactivity
 ---
 
 Interactive elements remain in the generated tree, but their behavior is removed and
@@ -360,7 +360,7 @@ the element is hidden from assistive technology.
 
 
 <!-- end_slide -->
-## Transformation 4: Strip form interaction
+## ⌨️ Transformation 4: Strip form interaction
 ---
 
 Inputs keep their geometry and type, but become inert skeleton elements.
@@ -389,7 +389,7 @@ Inputs keep their geometry and type, but become inert skeleton elements.
 
 
 <!-- end_slide -->
-## Transformation 5: Mark the skeleton root
+## 📌 Transformation 5: Mark the skeleton root
 ---
 
 The generated root is explicitly identified as a loading state.
@@ -409,7 +409,7 @@ The generated root is explicitly identified as a loading state.
 
 
 <!-- end_slide -->
-## Transformation 7: Remove insignificant elements
+## 🧹 Transformation 7: Remove insignificant elements
 ---
 
 Layout-only elements that do not contribute meaningful visual structure can be removed.
@@ -434,7 +434,7 @@ The generator keeps the visual structure that matters and drops elements that re
 nothing or contribute no meaningful visual information.
 
 <!-- end_slide -->
-## Automatic generation
+## 🚀 Automatic generation
 ---
 
 ![image:width:100%](./skullmaster-demo.gif)
@@ -442,11 +442,11 @@ nothing or contribute no meaningful visual information.
 
 <!-- end_slide -->
 <!-- jump_to_middle -->
-Stage 5: <span style="color:blue">Customization<span>
+🎨 Stage 5: <span style="color:blue">Customization<span>
 ---
 
 <!-- end_slide -->
-## Customizability
+## 🎛️ Customizability
 ---
 
 Of course we could go and edit the generated files. But that breaks the single source
@@ -454,18 +454,18 @@ of truth — and the fix dies the next time we generate. So the correction goes 
 source, where it changes no styles in production: only the way the skeleton is generated.
 
 <!-- pause -->
-### <span style="color:#4ADE80">Data attributes to the rescue</span>
+### 💡 <span style="color:#4ADE80">Data attributes to the rescue</span>
 
 They ride along in the DOM for free, and the generator is the only thing that reads them.
 
 <!-- pause -->
-### `data-depth="-1"` — transparent, but still laid out
+### 👻 `data-depth="-1"` — transparent, but still laid out
 
 Set it on elements that should stay invisible while keeping their place in the layout.
 Remove it, or set another depth, on elements that should render a visible bone.
 
 <!-- pause -->
-### `data-skip-skull` — leave the whole subtree out
+### 🙈 `data-skip-skull` — leave the whole subtree out
 
 Add it to the root of anything that should not be generated at all. SkullMaster ignores
 that element and every one of its descendants.
@@ -477,14 +477,14 @@ that element and every one of its descendants.
 ```
 
 <!-- end_slide -->
-## Customizability, type safe
+## 🔒 Customizability, type safe
 ---
 
 The same corrections, without touching markup by hand. The attributes had to be typed
 into the DOM; these are typed for you.
 
 <!-- pause -->
-### `markAsSkull(name, tweaks?)`
+### 🏷️ `markAsSkull(name, tweaks?)`
 
 Registers the component for skeleton generation, and takes the tweaks for the top level
 element:
@@ -494,7 +494,7 @@ element:
 ```
 
 <!-- pause -->
-### `tweakForSkull(tweaks?)`
+### 🎛️ `tweakForSkull(tweaks?)`
 
 The same tweaks, applied to a child of an element that is already registered:
 
@@ -506,10 +506,10 @@ The same tweaks, applied to a child of an element that is already registered:
 Nothing here changes production styling — the tweaks only change what ends up in the
 generated skeleton.
 <!-- end_slide -->
-# Comparisons
+# ⚖️ Comparisons
 --- 
 
-## Comparing the Approaches
+## ⚖️ Comparing the Approaches
 
 <!-- column_layout: [3, 2] -->
 
@@ -526,18 +526,18 @@ generated skeleton.
 
 ---
 <!-- pause -->
-### Runtime overhead
+### 🏃 Runtime overhead
 
 Shimmer From Structure generates the skeleton at build time, so there is no runtime generation overhead.
 
 
 <!-- pause -->
-### Customizability
+### 🎛️ Customizability
 
 Shimmer From Structure supports customization through data attributes, giving developers control over individual elements.
 
 <!-- pause -->
-### Auto-sync
+### 🔄 Auto-sync
 
 Boneyard JS and Shimmer From Structure can regenerate when UI code changes.
 For Skullmaster, component hashing  alert the developer, but regeneration remains developer-triggered.
@@ -552,7 +552,7 @@ For Skullmaster, component hashing  alert the developer, but regeneration remain
 
 <!-- pause -->
 
-### Conditional components
+### 🔀 Conditional components
 
 No meaningful difference.
 
@@ -560,25 +560,35 @@ Modals, authenticated content, and other conditional UI require a headless brows
 
 <!-- pause -->
 
-### Mock fixtures
+### 🧩 Mock fixtures
 
 All three approaches require mock fixtures for conditional or otherwise inaccessible UI.
 
 <!-- pause -->
 
-### Real skeleton markup
+### 🦴 Real skeleton markup
 
 Boneyard JS and Shimmer From Structure produce real skeleton markup.
 
 Skullmaster does not.
 <!-- end_slide -->
-## Thanks!
+# That's it!
 ---
-<!-- column_layout: [1] -->
-<!-- column: 0 -->
-<!-- jump_to_middle -->
 <!-- no_footer -->
 
-# Thanks!
+### 💻 Project & reading
 
-<span style="color:#a8df8e">https://github.com/ajth-in/skullmaster</span>
+- 🔗 [github.com/ajth-in/skullmaster](https://github.com/ajth-in/skullmaster)
+
+- 📖 [Read more: Your skeleton loader shouldn't be another component to maintain](https://ajth.in/blog/your-skeleton-loader-shouldnt-be-another-component-to-maintain/)
+
+- 🙌 [Looking for contributors — pick an issue](https://github.com/ajth-in/skullmaster/issues)
+
+
+### 🤝 Reach out to us
+
+- [Ajith Kumar P M](https://www.linkedin.com/in/ajth-kumar-p-m)
+
+- [Aswathy Saji](https://www.linkedin.com/in/aswathy-saji-68ba47192/)
+
+- [Amjad N](https://www.linkedin.com/in/amjad-n/)
